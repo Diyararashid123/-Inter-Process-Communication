@@ -24,8 +24,10 @@
 
 # Part 3- Timing functions:
 ## Picture 7 explaination:
-### The third and final part of the RTMK is the timing functions that were implemented. This can be seen in the figure above (Figure 7). The first function is Wait, it sends the task from the ReadyList to the TimerList for a duration that is decided by the argument of the function.  
+### The third and final part of the RTMK is the timing functions that were implemented. This can be seen in the figure above (Picture 7). The first function is Wait, it sends the task from the ReadyList to the TimerList for a duration that is decided by the argument of the function.  
+
 ### The second function is set_deadline. It changes the deadline of the current task and sorts the ReadyList again.  
+
 ### The third Timer function is TimerInt which executes every Systick and starts by checking if any tasks in the WaitingList have reached their deadlines. If they have, they are moved to the ReadyList. After doing that, the function then checks if any of the tasks in the TimerList are ready to be moved to the ReadyList and moves the ones that are.
 
 
