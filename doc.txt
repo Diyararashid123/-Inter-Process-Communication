@@ -6,3 +6,9 @@ Then a function called SwitchContext is called.
 That function sets the task that is going to run next and stores where in the previous task it switched so that once that task is running again it can pick up where it left off. 
 
 ## From here on i will explain how the intier program works in the Image file in ditajl.
+
+## We have used a doubly linked list to help us remove tasks and organize them in the correct order. This makes it easier to add items to the list or remove them. We also have a head and tail pointing to the list's first and last node. Additionally, we implemented that all nodes should have a previous and next. We have various functions in our double-linked list, such as inserting first and last, which add to the beginning or end of the list. We also have a sorted insert that sorts all the items we have added to the list. This makes it possible to easily remove items from the beginning or the end of the list. Finally, an extract function allows us to disconnect something from the list without affecting the other nodes.  
+
+## Everything had to have memory space allocated before implementation and once something was no longer needed that memory address had to be released using the free function.  The free function is a part of the C-Library. The functions we used to allocate memory were malloc and calloc which are also a part of the C-Library. 
+
+## When we wanted to copy the data from one pointer to another in the messages, we used the memcopy function that is included in the C-Library. 
