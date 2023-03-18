@@ -1,2 +1,15 @@
+#Part 1 – Task Administration  
 ## Picture one explaination:
 ### The first part of the project was about creating two different states for the RTMK. In the first state (INIT) the RTMK initiates the ReadyList, WaitingList, and TimerList. Followed by creating the idle task that always is at the tail of the ReadyList. After the INIT phase is over the program changes to the RUNNING state.  That is when the tasks start running, when a task is terminated the next task starts running. This can be seen in Figure 1
+
+# Part 2 – Inter Process Communication:
+#The second part of the project was all about Inter-Process Comunication and blocking tasks. Blocked tasks end up in the WaitingList until they are unblocked and moved back to the ReadyList by a different task either sending or receiving a message. The messages use a mailbox that we implemented with FIFO functionality.s
+## Picture two explaination:
+### Picture 2 shows how the tasks can send data to each other using four different functions. The send_wait and receive_wait functions are synchronous because they block the task when used. While the send_no_wait and receive_no_wait functions are asynchronous since they do not block the task. All these functions use a mailbox to store the messages.
+
+## Picture three explaination:
+### The first step in the send_wait function is to check if the mailbox is empty which is shown in picture 3. If it is, a new message is inserted, the task is blocked, and the function ends. However, if the mailbox is not empty, we proceed to check if the oldest message is a receiver type. If it is not, a new message is inserted, the task is blocked, and then the function ends. On the other hand, if it is a receiver-type message, it unblocks the task, deletes the message from the mailbox, and ends the function. 
+
+## Picture four explaination:
+### Now we have receive_wait which is explained in Figure 4 and the first step is to check if our mailbox is empty, if yes then we will insert a new message and afterwards the task is blocked, then the function ends. However, if our mailbox is not empty, the next step is to check if the oldest message is from the sender. If it is not, it will insert a new message into the mailbox and block the task. However, if the oldest message is from the sender, it will check if the sending task is in the WaitingList. If it is, the task will be unblocked, and the data copied to the receiving task. Then, it will delete the message and end the process. If the sending task is not in the WaitingList, the function will simply copy the data from the receiver, delete the message, and end the process.
+
