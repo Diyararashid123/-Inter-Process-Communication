@@ -1,0 +1,6 @@
+## The RTMK is built in three parts. Going forward, the report will go over each part in detail with flowcharts to make it easier to follow each step.  
+## Memory management is a large part of how to make an operating system run smoothly and efficiently. 
+Therefore, a lot of focus was placed on making sure our memory management was correctly implemented. 
+Each time something is added or removed from the ReadyList  the program updates a variable PreviousTask to NextTask and then NextTask to the head of the ReadyList. 
+Then a function called SwitchContext is called. 
+That function sets the task that is going to run next and stores where in the previous task it switched so that once that task is running again it can pick up where it left off. 
