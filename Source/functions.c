@@ -6,7 +6,7 @@
 #include "core_cmFunc.h"
 #include "core_cm3.h"
 #include "core_cmInstr.h"
-//project
+
 int Ticks=0;
 exception kernelmode=INIT;
 TCB * NextTask=NULL;
@@ -20,14 +20,14 @@ TCB * PreviousTask=NULL;
  void TimerInt() {
   Ticks++;
  
-  while(TimerList->pHead->nTCnt<=Ticks){
+  while(TimerList->pHead->nTCnt<=Ticks&&TimerList->pHead!=NULL){
   PreviousTask=NextTask;
   insert(extract(TimerList,TimerList->pHead),ReadyList);
     NextTask=ReadyList->pHead->pTask;
 
   }
   
-    while(WaitingList->pHead->pTask->Deadline<=Ticks){
+    while(WaitingList->pHead->pTask->Deadline<=Ticks&&WaitingList->pHead!=NULL){
   PreviousTask=NextTask;
   insert(extract(WaitingList,WaitingList->pHead),ReadyList);
     NextTask=ReadyList->pHead->pTask;
@@ -56,8 +56,6 @@ list *createlist(void) { // creating list
     return (list *)new_list;
   }
 }
-// om jag har pointers så är dem inte automatic allocerat, men när jag har inte
-// pointers så då e dem automatik allocerat
 
 bool delet(list *list, listobj *match) { // måste vara en pointer
   // flera än en rad kod
@@ -137,8 +135,8 @@ void deleteMail(mailbox *box, msg *match) { // måste vara en pointer
  
   msg *current = box->pHead;
   msg *temp = NULL;
-
-  if (box->nBlockedMsg>0) {
+/*
+  if (box->nMessages>0) {
     box->nMessages--;
     free(current->pData);
     free(current);
@@ -150,7 +148,7 @@ void deleteMail(mailbox *box, msg *match) { // måste vara en pointer
     
     return ;
   }
-  
+  */
   if (box->pHead ==  match) { // if my current previous is NULL im at the first node
     box->pHead = current->pNext; // when i delet my first node witch is my
       box->pHead->pPrevious=NULL;  
@@ -371,7 +369,16 @@ exception create_task(void (*task_body)(), uint deadline) {
   new_tcb->SP = &(new_tcb->StackSeg[STACK_SIZE - 9]);
   
   if (kernelmode == INIT) {
-    insert(create_listobj(new_tcb), ReadyList);
+    
+      listobj*ins=create_listobj(new_tcb);
+      if(ins==NULL){
+      free(new_tcb);
+      free(ins);
+      free(new_tcb);
+      return FAIL;
+      
+      }
+    insert(ins, ReadyList);
     return OK;
   }
 
@@ -439,7 +446,7 @@ mailbox* create_mailbox (uint nMessages, uint nDataSize){
   mailbox *new_mailbox = (mailbox *)calloc(1, sizeof(mailbox));
   
   if(new_mailbox==NULL){
-    //free(new_mailbox);
+    free(new_mailbox);
     return NULL; 
   }
   new_mailbox->nDataSize=nDataSize;
@@ -460,7 +467,7 @@ exception remove_mailbox (mailbox* mBox){
   return NOT_EMPTY;
 }
 void DeleteM(mailbox* mBox){
-   
+  if(mBox->pHead!=NULL){
     free(mBox->pHead->pData);
     mBox->nMessages--;
     if(mBox->nMessages>0&&mBox->pHead!=NULL){
@@ -468,14 +475,19 @@ void DeleteM(mailbox* mBox){
     
    
     mBox->pHead->pPrevious=NULL;
-     //free(mBox->pHead->pPrevious);
+    if(mBox->pHead==mBox->pTail)
+      mBox->pHead->pNext=NULL;
       
     }
     else {
+      mBox->pHead->pNext=NULL;
+       mBox->pHead->pPrevious=NULL;
       mBox->pHead=NULL;
+      
     mBox->pTail=NULL;
       free(mBox->pHead);
     }
+}
 }
 
 exception send_wait( mailbox* mBox, void* pData){
@@ -484,13 +496,15 @@ exception send_wait( mailbox* mBox, void* pData){
       int x=0;
   if(receive->Status==RECEIVER){
      memcpy(receive ->pData,pData, mBox ->nDataSize);
-    
-    DeleteM(mBox);
+        
+        DeleteM(mBox);
      mBox->nBlockedMsg--;
+
     PreviousTask = NextTask;
   
-    insert( extract(WaitingList,mBox->pHead->pBlock),ReadyList);
+    insert( extract(WaitingList,receive->pBlock),ReadyList);
     NextTask = ReadyList->pHead->pTask;
+
   }else {
     
   
@@ -502,13 +516,14 @@ exception send_wait( mailbox* mBox, void* pData){
    
     new_msg->pData = (char*)malloc(mBox->nDataSize);
     if(new_msg->pData == NULL){
-      //free(new_msg);
+      free(new_msg);
       return FAIL;
     }
      memcpy(new_msg ->pData,pData, mBox ->nDataSize);
-     if(mBox->nMaxMessages==mBox->nMessages)
+    if(mBox->nMaxMessages==mBox->nMessages){
+      mBox->nBlockedMsg--;
         DeleteM(mBox); 
-     
+    }
      
      new_msg->pBlock=ReadyList->pHead;
 
@@ -525,7 +540,9 @@ exception send_wait( mailbox* mBox, void* pData){
   
   if(Ticks>=NextTask->Deadline){
     if(x==1){
+      int i=mBox->nMessages;
     deleteMail(mBox,ReadyList->pHead->pMessage);
+    if(mBox->nMessages<i)
     mBox->nBlockedMsg--;
     }
    return DEADLINE_REACHED;
@@ -562,8 +579,10 @@ exception receive_wait ( mailbox* mBox, void*
      if(new_msg==NULL)
        return FAIL;    
      
-          if(mBox->nMaxMessages==mBox->nMessages)
+     if(mBox->nMaxMessages==mBox->nMessages){
+        mBox->nBlockedMsg--;
         DeleteM(mBox);
+     }
         x=1;
      new_msg->pBlock=ReadyList->pHead;
      new_msg->pData=NULL;
@@ -579,7 +598,9 @@ exception receive_wait ( mailbox* mBox, void*
     SwitchContext();
   if(Ticks>=NextTask->Deadline){
     if(x==1){
+      int i=mBox->nMessages;
     deleteMail(mBox,ReadyList->pHead->pMessage);
+    if(mBox->nMessages<i)
     mBox->nBlockedMsg--;
     }
    return DEADLINE_REACHED;
@@ -598,6 +619,8 @@ void insert_lastM(msg *obj, mailbox *node) {
   if (node->pHead == NULL) {
     node->pHead = newnode;
     node->pTail = newnode;
+    newnode->pNext=NULL;
+    newnode->pPrevious=NULL;
     return;
   }
 
@@ -624,11 +647,16 @@ exception send_no_wait( mailbox *mBox, void
    msg* receive = mBox ->pHead;
    if(receive->Status==RECEIVER){
      memcpy(receive ->pData,pData, mBox ->nDataSize);
+    
+   
+    PreviousTask = NextTask;
+    if(receive->pBlock!= NULL){
+    insert( extract(WaitingList,mBox->pHead->pBlock),ReadyList);
+    }
+    NextTask = ReadyList->pHead->pTask;
+    
     DeleteM(mBox);
     
-    PreviousTask = NextTask;
-    insert( extract(WaitingList,mBox->pHead->pBlock),ReadyList);
-    NextTask = ReadyList->pHead->pTask;
     SwitchContext();  
                        }
    else{

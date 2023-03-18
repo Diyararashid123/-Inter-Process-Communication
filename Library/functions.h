@@ -17,7 +17,8 @@ void insert(listobj *obj,
 
 listobj *create_listobj(TCB *task);
 
-
+  exception remove_mailbox (mailbox* mBox);
+  
 exception init_kernel(void);
 
 
@@ -26,7 +27,8 @@ exception create_task(void (*task_body)(), uint deadline);
 exception receive_wait ( mailbox* mBox, void*
                         pData);
 
-void Opsys(void);
+
+
 
 extern list *ReadyList;
 extern list *WaitingList;
