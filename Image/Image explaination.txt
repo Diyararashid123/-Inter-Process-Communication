@@ -1,0 +1,2 @@
+## Picture one explaination:
+### The first part of the project was about creating two different states for the RTMK. In the first state (INIT) the RTMK initiates the ReadyList, WaitingList, and TimerList. Followed by creating the idle task that always is at the tail of the ReadyList. After the INIT phase is over the program changes to the RUNNING state.  That is when the tasks start running, when a task is terminated the next task starts running. This can be seen in Figure 1
